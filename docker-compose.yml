@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build: ./fastapi_app
+    container_name: fastapi_app
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    networks:
+      - app-net
+
+  jupyter:
+    build: ./jupyter_app
+    container_name: jupyter_app
+    env_file: .env
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./data:/data
+      - ./scripts:/scripts
+      - ./jupyter_app/notebooks:/home/jovyan/work
+    command: start-notebook.sh --NotebookApp.token=''
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
