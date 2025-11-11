@@ -22,14 +22,14 @@ if [ "$FLAG" == "--upload" ]; then
   echo "⏳ Aguarda o FastAPI iniciar..."
     sleep 10  
   curl -X POST "http://localhost:8000/upload"
+
+  echo "[3] Aguardando Snowflake processar o load via Snowpipe..."
+  sleep 10  
+  
+  echo "[4] Executando fetch_from_snowflake para puxar os dados do Snowflake..."
+  docker compose exec jupyter python /scripts/fetch_from_snowflake.py
 else
   echo "[2] [Skip] Upload para o S3 não solicitado."
 fi
-
-echo "[3] Aguardando Snowflake processar o load via Snowpipe..."
-sleep 10  
-
-echo "[4] Executando fetch_from_snowflake para puxar os dados do Snowflake..."
-docker compose exec jupyter python /scripts/fetch_from_snowflake.py
 
 echo "[DONE] Pipeline concluído!"
