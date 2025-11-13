@@ -62,7 +62,7 @@ services:
       sleep 10 &&
       mc alias set local http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD &&
       mc mb local/$MLFLOW_ARTIFACT_BUCKET || echo 'Bucket já existe' &&
-      echo '✅ Bucket $MLFLOW_ARTIFACT_BUCKET pronto no MinIO.'
+      echo 'Bucket $MLFLOW_ARTIFACT_BUCKET pronto no MinIO.'
       "
     networks:
       - app-net
