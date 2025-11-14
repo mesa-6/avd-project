@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 import pandas as pd
 import snowflake.connector
 from dotenv import load_dotenv
@@ -36,8 +35,7 @@ try:
     print(f"Dados coletados: {df.shape[0]} linhas, {df.shape[1]} colunas.")
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = os.path.join(OUTPUT_DIR, f"{SNOWFLAKE_TABLE}_{timestamp}.csv")
+    output_path = os.path.join(OUTPUT_DIR, f"{SNOWFLAKE_TABLE}.csv")
 
     df.to_csv(output_path, index=False)
     print(f"Arquivo salvo: {output_path}")
