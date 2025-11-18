@@ -1,0 +1,26 @@
+apiVersion: 1
+
+datasources:
+  - name: grafana-snowflake-datasource
+    type: grafana-snowflake-datasource
+    access: proxy
+    isDefault: true
+    editable: true
+
+    jsonData:
+      account: ${SNOWFLAKE_ACCOUNT}
+      region: ""                      # deixe vazio se sua conta já inclui a região
+      authenticationType: "password"
+      username: ${SNOWFLAKE_USER}
+      role: ${SNOWFLAKE_ROLE}
+      warehouse: ${SNOWFLAKE_WAREHOUSE}
+      database: ${SNOWFLAKE_DATABASE}
+      schema: ${SNOWFLAKE_SCHEMA}
+      minInterval: "10s"
+      rowLimit: 50000
+      connectionTimeout: 5
+      requestTimeout: 120
+      variableInterpolationFormat: "none"
+
+    secureJsonData:
+      password: ${SNOWFLAKE_PASSWORD}
