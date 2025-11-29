@@ -296,8 +296,6 @@ docker compose logs fastapi_app
 ---
 
 ## Licença
+This project is licensed under the terms of the [MIT License](LICENSE).
 
-
-
----
 
