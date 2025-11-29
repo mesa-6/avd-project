@@ -261,15 +261,6 @@ mlruns/
 
 ---
 
-## Checklist Antes de Rodar
-
-* [ ] Criar `.env`
-* [ ] Inserir `data/raw/inmet.csv`
-* [ ] Ter Docker instalado
-* [ ] Executar pipeline com `bash pipeline.sh --upload`
-
----
-
 ## Debug & Troubleshooting
 
 ### FastAPI não responde
