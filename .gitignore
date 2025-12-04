@@ -143,6 +143,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# mlflow
+**/mlruns/
+
 # mypy
 .mypy_cache/
 .dmypy.json
