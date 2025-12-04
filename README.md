@@ -1,182 +1,290 @@
-# 📊 Projeto: Análise e Visualização de Dados — 2025.2  
-**CESAR School**
+# Projeto: Pipeline de Ingestão, Processamento e Análise — Inmet + Snowflake + MLflow
+
+## Visão Geral
+Este repositório implementa uma arquitetura completa para ingestão, armazenamento, processamento e análise de dados meteorológicos do INMET.  
+O fluxo principal é:
+
+`data/raw/inmet.csv → FastAPI → S3 → SQS → Snowpipe → Snowflake (staging → clean) → data/processed/inmet_clean.csv`
+
+Além disso, o ambiente de experimentação em Machine Learning utiliza:
+
+`Jupyter → MLflow → MinIO (artefatos) → MySQL (backend store)`
+
+A orquestração é feita com **Docker Compose**, e o script `pipeline.sh` automatiza todo o processo (upload, processamento e extração final).
 
 ---
+## Estrutura do Repositório
 
-## 🧭 1. Introdução e Objetivos
-
-Este projeto foi desenvolvido como parte da disciplina **Análise e Visualização de Dados (2025.2)** da CESAR School.
-
-O objetivo é construir uma pipeline moderna que permita:
-
-- Ingerir dados a partir de arquivos CSV enviados via **FastAPI**
-- Armazenar e versionar os arquivos em um **bucket S3**
-- Carregar automaticamente para o **Snowflake via Snowpipe**
-- Analisar, tratar e modelar os dados em **Jupyter Notebooks**
-- Visualizar insights por meio de dashboards/notebooks
-
----
-
-## 🏗️ 2. Arquitetura e Ferramentas Utilizadas
-
-A solução utiliza uma arquitetura containerizada com **Docker Compose**, integrando diferentes componentes.
-
-### 2.1 Componentes Principais
-
-| Componente     | Função |
-|----------------|--------|
-| **FastAPI** | Endpoint para upload de CSVs |
-| **AWS S3 / MinIO** | Armazenamento dos arquivos CSV (Data Lake) |
-| **Snowflake** | Ingestão automática via Snowpipe |
-| **Jupyter Notebook** | Análise exploratória, limpeza, modelagem |
-| **MLflow** | Rastreamento de experimentos |
-| **MySQL** | Backend para o MLflow |
-| **Docker Compose** | Orquestração dos serviços |
-
----
-
-### 2.2 Fluxo Arquitetural
-
-```mermaid
-flowchart LR
-    A[Usuário envia CSV via FastAPI] --> B[Arquivo salvo no Bucket S3/MinIO]
-    B --> C[Snowpipe detecta novo arquivo]
-    C --> D[Snowflake carrega dados na tabela WINE_RAW]
-    D --> E[Analista acessa Jupyter Notebook]
-    E --> F[Análises, limpeza, modelagem]
-    F --> G[Resultados e experimentos registrados no MLflow]
-```
-
-## 🔬 3. Metodologia de Tratamento e Modelagem de Dados
-
-Fluxo inspirado em **CRISP-DM**.
-
-### 3.1 Entendimento dos Dados
-- Dados CSV com atributos numéricos  
-- Ingestão para **WINE_RAW** (Snowflake)
-
-### 3.2 Qualidade e Limpeza
-- Conversão de tipos  
-- Tratamento de inconsistências  
-- Valores ausentes  
-- Duplicidades (mantidas quando justificadas)
-
-### 3.3 Transformações
-- Colunas derivadas  
-- Filtragem e reorganização  
-- Padronização de variáveis
-
-### 3.4 Modelagem
-- Experimentos no Jupyter  
-- Rastreamento com MLflow  
-
-
----
-
-## 📈 4. Análises e Resultados
-
-### 4.1 Estatísticas Descritivas
-- Média, mediana, desvio padrão  
-- Distribuições
-
-### 4.2 Visualizações
-- Histogramas  
-- Boxplots  
-- Matriz de correlação  
-- Gráficos de dispersão
-
-### 4.3 Tabelas Relevantes
-- Estatísticas globais  
-- Correlações  
-- Amostras tratadas  
-
-
----
-
-## 📊 5. Dashboard e Insights Obtidos
-
-Os dashboards permitem visualizar:
-
-- Evolução das variáveis  
-- Distribuições  
-- Comparação entre variáveis  
-- Fatores que influenciam a variável alvo  
-
-**Exemplos de insights:**
-- Identificação das features mais relevantes  
-- Padrões detectados na análise exploratória  
-
-
----
-
-## 🧪 6. Estrutura do Repositório
-```
+```md
 .
-├── docker-compose.yml
+├── data
+│   ├── processed/            # dados limpos exportados pelo Snowflake
+│   └── raw/                  # arquivos CSV brutos para upload
+│
 ├── fastapi_app/
+│   ├── main.py               # endpoint POST /upload → envia CSV para S3
+│   ├── Dockerfile
+│   └── requirements.txt
+│
 ├── jupyter_app/
+│   ├── notebooks/
+│   │   ├── exploracao.ipynb
+│   │   └── modelagem.ipynb
+│   ├── Dockerfile
+│   └── requirements.txt
+│
 ├── mlflow_app/
-├── data/
-    └── raw/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
 ├── scripts/
-    └── pipeline.sh
+│   ├── pipeline.sh           # script, facilitar uso da solução
+│   └── fetch_from_snowflake.py
+│
+├── docker-compose.yml
+└── README.md
+
+
 ```
 
+---
+
+## Organização e Documentação
+- **README.md**: orientar a execução e arquitetura do projeto.
+- **data/raw**: arquivos brutos que serão enviados à API.
+- **data/processed**: saída final extraída do Snowflake (camada clean).
+- **scripts/**: automações de ingestão e extração.
+- **fastapi_app**, **jupyter_app**, **mlflow_app**, **etc**: todos os serviços foram isolados via Docker.
 
 ---
 
-## ⚙️ 7. Requisitos
-
-- Docker  
-- Git  
-- Conta na AWS
-- Conta no Snowflake  
-- Arquivo `.env` configurado  
+## Requisitos
+- Docker 
+- Conta Snowflake com Storage Integration configurado
+- Bucket S3 configurado para Snowpipe
+- Credenciais no arquivo `.env` na raiz
 
 ---
 
-## 🚀 8. Como Executar o Projeto
+## Configuração do Ambiente (.env)
 
-Após realizar clone do projeto e dentro do diretório AVD_PROJECT_ARCHITECTURE, basta:
+Crie um arquivo `.env` na raiz:
+
+```env
+# AWS
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=
+S3_BUCKET=
+S3_PATH=
+
+# Snowflake
+SNOWFLAKE_USER=
+SNOWFLAKE_PASSWORD=
+SNOWFLAKE_ACCOUNT=
+SNOWFLAKE_WAREHOUSE=
+SNOWFLAKE_DATABASE=
+SNOWFLAKE_SCHEMA=
+SNOWFLAKE_TABLE=
+
+# Minio
+MINIO_ROOT_USER=
+MINIO_ROOT_PASSWORD=
+MINIO_ACCESS_KEY_ID=
+MINIO_SECRET_ACCESS_KEY=
+
+# MySQL
+MYSQL_ROOT_PASSWORD=
+MYSQL_DATABASE=
+MYSQL_USER=
+MYSQL_PASSWORD=
+
+# MlFlow endpint
+MLFLOW_MINIO_ENDPOINT_URL=
+MLFLOW_ARTIFACT_BUCKET=  
+MLFLOW_BACKEND_URI=
+
+````
+
+**Importante:**
+
+* Não comitar `.env`.
+* Ajuste nomes de tabela e schema conforme seu S3 e Snowflake.
+
+---
+
+## Preparando os Dados (colocar CSV)
+
+1. Adicione seu arquivo original na pasta:
+
+   ```
+   data/raw/inmet.csv
+   ```
+
+2. O FastAPI irá receber este arquivo e enviá-lo para o bucket S3.
+
+---
+
+## Executando a Pipeline
+
+### 1) Executar o script principal
+
+Toda a automação do pipeline é feita pelo script `pipeline.sh`.  
+Na raiz do projeto, execute:
+
+#### Com upload (FastAPI → S3 → Snowpipe → Snowflake → exportação):
+```bash
+bash scripts/pipeline.sh --upload
+````
+
+#### Sem upload (apenas inicializa os containers):
 
 ```bash
-# execução completa + upload de dados
-bash scripts/pipeline.sh --upload
-
-# apenas subir containers
 bash scripts/pipeline.sh
 ```
 
-## 🌐 9. Endpoints e Interfaces
-
-| Serviço          | URL                       |
-|------------------|---------------------------|
-| **FastAPI**      | http://localhost:8000     |
-| **Jupyter**      | http://localhost:8888     |
-| **MinIO Console**| http://localhost:9001     |
-| **MLflow**       | http://localhost:5000     |
-
 ---
 
-## 🧪 10. Testando o Upload via FastAPI
+## O que o script faz
 
-1. Coloque o arquivo CSV em `data/raw/`
-2. Envie:
+O `pipeline.sh` é responsável por:
 
-```bash
-curl -X POST http://localhost:8000/upload
+1. **Subir todos os containers** utilizando `docker compose up -d`
+2. **Validar a existência do arquivo `.env`** na raiz do projeto
+3. Quando executado com `--upload`:
+
+   * Aguarda o FastAPI iniciar (10s)
+   * Envia o arquivo CSV presente em `data/raw/` para o FastAPI
+     → o FastAPI encaminha o arquivo para o S3
+   * Aguarda o Snowpipe processar o arquivo (10s)
+     → arquivo carregado na camada **RAW**
+     → Snowflake aplica o tratamento e gera a tabela **CLEAN**
+   * Executa `fetch_from_snowflake.py` dentro do container `jupyter`
+     → salva o resultado final em:
+
+     ```
+     data/processed/inmet_clean.csv
+     ```
+4. Quando executado **sem** `--upload`:
+
+   * Sobe containers
+   * Não envia novos arquivos
+   * Não executa o fetch automaticamente
+
+Ao final, o script finaliza com:
+
+```
+[DONE] Pipeline concluído!
+```
+
+
+## Script `fetch_from_snowflake.py`
+
+Este script também utilizado pelo `pipeline.sh`:
+
+* conecta ao Snowflake via credenciais do `.env`;
+* lê a tabela `<SNOWFLAKE_TABLE_CLEAN>`;
+* salva em:
+
+```
+data/processed/inmet_clean.csv
 ```
 
 ---
 
-## 📝 11. Conclusões
+## Arquitetura (Mermaid)
 
-O projeto demonstra:
-- Integração entre FastAPI, S3, Snowflake, Jupyter e MLflow
-- Automação da ingestão via Snowpipe
-- Pipeline completa de análise e modelagem
-- Estrutura profissional de engenharia de dados
+```mermaid
+flowchart LR
+
+    %% ====== Files ======
+    A[CSV: data/raw/inmet.csv] --> B
+
+    %% ====== Ingestion API ======
+    B[FastAPI /upload] --> C
+
+    %% ====== AWS Layer ======
+    C[S3 Bucket] --> D[SQS Event Trigger]
+    D --> E[Snowpipe]
+
+    %% ====== Snowflake ======
+    E --> F[(Snowflake RAW)]
+    F --> G[(Snowflake CLEAN)]
+
+    %% ====== Fetch Process ======
+    G --> X[fetch_from_snowflake.py]
+    X --> H[CSV: data/processed/inmet_clean.csv]
+
+    %% ====== Jupyter & ML ======
+    H --> J[Jupyter Notebooks]
+    J --> M[MLflow Tracking]
+    M --> O[(MySQL Backend Store)]
+    M --> P[MinIO Artefatos]
+
+```
 
 ---
 
-## 🚀 12. Melhorias Futuras
+## Observações sobre Docker
+
+* Todos os serviços são isolados.
+* O projeto é reproduzível em qualquer ambiente com Docker.
+* Para logs:
+
+```bash
+docker compose logs fastapi_app
+docker compose logs mlflow
+docker compose logs jupyter
+```
+
+---
+
+## Versionamento (GitHub)
+
+Recomendações:
+
+* Branch principal: `main`
+* Branch de desenvolvimento: `dev`
+* Branches de feature: `feature/<nome>`
+* `.gitignore`: adicionar:
+
+```
+.env
+data/
+__pycache__/
+*.pyc
+*.ipynb_checkpoints
+mlruns/
+```
+
+---
+
+## Debug & Troubleshooting
+
+### FastAPI não responde
+
+```
+docker compose logs fastapi_app
+```
+
+### Snowpipe não processa
+
+* Verifique S3 Integration
+* Verifique permissões do stage
+* Teste manualmente com:
+
+  ```sql
+  select * from table(information_schema.copy_history(...));
+  ```
+
+### MLflow não registra artefatos
+
+* Verifique se o MinIO está acessível
+* Cheque as credenciais MinIO no `.env`
+
+---
+
+## Licença
+This project is licensed under the terms of the [MIT License](LICENSE).
+
+
