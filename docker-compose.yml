@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   fastapi:
@@ -12,6 +12,7 @@ services:
     depends_on:
       - mysql
       - minio
+    restart: unless-stopped
     networks:
       - app-net
 
@@ -30,33 +31,30 @@ services:
       - mysql
       - minio
       - mlflow
+    restart: unless-stopped
     networks:
       - app-net
-    
+
   minio:
     image: minio/minio
     container_name: minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    env_file: .env
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
+    restart: unless-stopped
     networks:
       - app-net
-  
+
   minio-init:
     image: minio/mc
     container_name: minio_init
     depends_on:
       - minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MLFLOW_ARTIFACT_BUCKET: ${MLFLOW_ARTIFACT_BUCKET}
+    env_file: .env
     entrypoint: >
       sh -c "
       sleep 10 &&
@@ -64,13 +62,14 @@ services:
       mc mb local/$MLFLOW_ARTIFACT_BUCKET || echo 'Bucket já existe' &&
       echo 'Bucket $MLFLOW_ARTIFACT_BUCKET pronto no MinIO.'
       "
+    restart: on-failure
     networks:
       - app-net
-
 
   mysql:
     image: mysql:8.0
     container_name: mysql
+    env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -80,12 +79,14 @@ services:
       - "13308:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    restart: unless-stopped
     networks:
       - app-net
 
   mlflow:
     build: ./mlflow_app
     container_name: mlflow
+    env_file: .env
     environment:
       MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_MINIO_ENDPOINT_URL}
       MINIO_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY_ID}
@@ -100,11 +101,32 @@ services:
     depends_on:
       - mysql
       - minio
+      - minio-init
     ports:
       - "5000:5000"
+    restart: unless-stopped
     networks:
       - app-net
-    
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    env_file: .env
+    environment:
+      - GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource,volkovlabs-echarts-panel
+      - GF_USERS_DEFAULT_THEME=dark
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - mysql
+      - minio
+    restart: unless-stopped
+    networks:
+      - app-net
 
 networks:
   app-net:
@@ -113,3 +135,4 @@ networks:
 volumes:
   mysql-data:
   minio-data:
+  grafana-data:

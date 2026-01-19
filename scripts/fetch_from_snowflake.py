@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 import pandas as pd
 import snowflake.connector
 from dotenv import load_dotenv

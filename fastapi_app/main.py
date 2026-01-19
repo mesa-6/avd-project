@@ -10,7 +10,7 @@ load_dotenv()
 # Configurações do S3
 S3_BUCKET = os.getenv("S3_BUCKET")
 S3_PATH = os.getenv("S3_PATH", "")
-LOCAL_FILE_PATH = "/data/raw/winequality-red_20251109_2310.csv"
+LOCAL_FILE_PATH = "../data/raw/INMET_NE_PE_A309_ARCO_VERDE_2023_2024.csv"
 
 s3 = boto3.client(
     "s3",
@@ -51,7 +51,7 @@ def upload_file():
 
         # Adicionando timestamp ao nome do arquivo
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"winequality-red_{timestamp}.csv"
+        filename = f"inmet_av_{timestamp}.csv"
 
         # Caminho dentro do bucket
         s3_key = f"{S3_PATH}{filename}"
